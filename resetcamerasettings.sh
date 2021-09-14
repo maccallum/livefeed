@@ -31,7 +31,11 @@ v4l2-ctl -d "$dev" -c white_balance_temperature=4600
 v4l2-ctl -d "$dev" -c white_balance_temperature_auto=1
 v4l2-ctl -d "$dev" -c sharpness=2
 v4l2-ctl -d "$dev" -c backlight_compensation=1
-v4l2-ctl -d "$dev" -c exposure_auto=3
+v4l2-ctl -d "$dev" -c exposure_auto=1
 v4l2-ctl -d "$dev" -c exposure_absolute=157
 v4l2-ctl -d "$dev" -c exposure_auto_priority=0
+v4l2-ctl -d "$dev" -c exposure_auto=3
+
+set +x
+v4l2-ctl --list-ctrls
 
