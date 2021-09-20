@@ -33,7 +33,7 @@ v4l2-ctl -d "$dev" -c sharpness=2
 v4l2-ctl -d "$dev" -c backlight_compensation=1
 v4l2-ctl -d "$dev" -c exposure_auto=1
 v4l2-ctl -d "$dev" -c exposure_absolute=157
-v4l2-ctl -d "$dev" -c exposure_auto_priority=0
+v4l2-ctl -d "$dev" -c exposure_auto_priority=1
 v4l2-ctl -d "$dev" -c exposure_auto=3
 
 set +x
