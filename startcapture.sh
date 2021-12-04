@@ -1,6 +1,6 @@
 #!/bin/bash
 
-screen -d -m -S cameras -t video0
+screen -fn -d -m -S cameras -t video0
 
 #screen -S cameras -p 0 -X stuff "gst-launch-1.0 v4l2src device=/dev/video0 ! nvvidconv ! 'video/x-raw(memory:NVMM),format=I420,framerate=(fraction)30/1,width=1920,height=1080' ! nvoverlaysink display-id=0\n"
 screen -S cameras -p 0 -X stuff "gst-launch-1.0 v4l2src device=/dev/video0 io-mode=2 ! 'image/jpeg,framerate=(fraction)30/1,width=1920,height=1080'  ! nvjpegdec ! 'video/x-raw' ! nvvidconv ! 'video/x-raw(memory:NVMM)' ! nvoverlaysink display-id=0 sync=false -ev\n"

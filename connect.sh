@@ -1,15 +1,21 @@
 #!/bin/bash
 
-screen -d -m -S cameracage -t rpib
+if [ $# -eq 0 ]
+then
+    n=2
+else
+    n=$(($1 - 1))
+fi
+
+screen -d -m -fn -S cameracage -t rpib
 screen -S cameracage -p 0 -X stuff "ssh rpib.local\n"
 
-screen -S cameracage -X screen -t jn0 1
-screen -S cameracage -p 1 -X stuff "ssh -A -t rpib.local ssh -A -t jn0.local\n"
+for nn in $(seq 0 "$n")
+do
+    screen -S cameracage -X screen -t "jn${nn}" $(($nn + 1))
+    screen -S cameracage -p $(($nn + 1)) -X stuff "ssh -A -t rpib.local ssh -A -t jn${nn}.local\n"
+done
 
-screen -S cameracage -X screen -t jn1 2
-screen -S cameracage -p 2 -X stuff "ssh -A -t rpib.local ssh -A -t jn1.local\n"
-
-screen -S cameracage -X screen -t jn2 3
-screen -S cameracage -p 3 -X stuff "ssh -A -t rpib.local ssh -A -t jn2.local\n"
+screen -S cameracage -X screen -t "local" $(($n + 1))
 
 screen -r cameracage
