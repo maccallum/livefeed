@@ -1,6 +1,8 @@
 #!/bin/bash
-
-sudo -u john /home/john/livefeed/cc_captured
+set -x
+sudo -u john /home/john/livefeed/cc_captured &
+sleep 5
+sudo -u john /home/john/livefeed/cc_config &
 
 # screen -fn -d -m -S cameras -t video0
 
