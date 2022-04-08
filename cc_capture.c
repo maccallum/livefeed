@@ -138,9 +138,6 @@ int gpio_fd_close(int fd)
     return close(fd);
 }
 
-GstMessage *msgbuf[65536];
-int nmsgs = 0;
-
 static gboolean gst_bus_call(GstBus *bus, GstMessage *msg, gpointer data)
 {
     GMainLoop *loop = (GMainLoop *)data;
@@ -166,7 +163,6 @@ static gboolean gst_bus_call(GstBus *bus, GstMessage *msg, gpointer data)
         break;
     }
     default:
-        msgbuf[nmsgs++] = gst_message_copy(msg);
         break;
     }
 
