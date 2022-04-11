@@ -8,7 +8,7 @@
 #include <sys/prctl.h>
 #include <fcntl.h>
 
-#define ARGLEN 64
+#define ARGLEN 256
 
 volatile int die = 0;
 
@@ -16,6 +16,7 @@ struct args
 {
     char cam[ARGLEN];
     char out[ARGLEN];
+    char filename[ARGLEN];
 };
 
 void *th(void *param)
@@ -57,7 +58,8 @@ void *th(void *param)
             execl("/home/john/livefeed/cc_capture",
                   "/home/john/livefeed/cc_capture",
                   args->cam,
-                  args->out);
+                  args->out,
+                  args->filename);
         }
     }
 }
@@ -97,10 +99,28 @@ int main(int ac, char **av)
     /* { */
     /*     flock(lockfd, LOCK_EX); */
     /* } */
+    time_t t = time(NULL);
+    struct tm tm = *localtime(&t);
+
     snprintf(args1.cam, ARGLEN, "%s", "cam1");
     snprintf(args1.out, ARGLEN, "%s", "0");
+    snprintf(args1.filename, ARGLEN, "%02d%02d%02d.%02d%02d%02d.0\n",
+             tm.tm_year + 1900,
+             tm.tm_mon + 1,
+             tm.tm_mday,
+             tm.tm_hour,
+             tm.tm_min,
+             tm.tm_sec);
+
     snprintf(args2.cam, ARGLEN, "%s", "cam2");
     snprintf(args2.out, ARGLEN, "%s", "1");
+    snprintf(args2.filename, ARGLEN, "%02d%02d%02d.%02d%02d%02d.1\n",
+             tm.tm_year + 1900,
+             tm.tm_mon + 1,
+             tm.tm_mday,
+             tm.tm_hour,
+             tm.tm_min,
+             tm.tm_sec);
 
     pthread_create(&t1, NULL, th, (void *)&args1);
     pthread_create(&t2, NULL, th, (void *)&args2);

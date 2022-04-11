@@ -162,6 +162,25 @@ static gboolean gst_bus_call(GstBus *bus, GstMessage *msg, gpointer data)
         g_main_loop_quit(loop);
         break;
     }
+
+    case GST_MESSAGE_WARNING:
+    {
+        gchar  *debug;
+        GError *error;
+
+        gst_message_parse_error(msg, &error, &debug);
+        g_free(debug);
+
+        g_printerr("Warning: %s\n", error->message);
+        g_error_free(error);
+
+        g_main_loop_quit(loop);
+        break;
+    }
+
+    case GST_MESSAGE_DEVICE_REMOVED:
+        g_print("Device removed\n");
+        break;
     default:
         break;
     }
@@ -180,6 +199,7 @@ int main(int argc, char *argv[])
     char buf[bufsize];
     char *cam = "cam1";
     char *out = "0";
+    char *filename = "suck.h264";
 
     /* int gpio = GPIO_LED; */
     /* gpio_export(gpio); */
@@ -194,6 +214,10 @@ int main(int argc, char *argv[])
     {
         out = argv[2];
     }
+    if(argc > 3)
+    {
+        filename = argv[3];
+    }
 
     buflen = snprintf(buf,
                       bufsize,
@@ -205,6 +229,27 @@ int main(int argc, char *argv[])
                       "! video/x-raw "
                       "! nvoverlaysink display-id=%s sync=false -ev",
                       cam, out);
+
+    /* 
+ gst-launch-1.0 v4l2src device=/dev/cam2 io-mode=2 ! 'image/jpeg,framerate=(fraction)30/1,width=1920,height=1080' ! nvjpegdec ! video/x-raw ! nvvidconv ! video/x-raw ! tee name=t ! queue leaky=1 ! nvoverlaysink display-id=1 sync=false -ev t. ! queue ! omxh264enc ! qtmux ! filesink location=testvideo.h264 sync=false
+     */
+    /* buflen = snprintf(buf, */
+    /*                   bufsize, */
+    /*                   "v4l2src device=/dev/%s io-mode=2 " */
+    /*                   "! image/jpeg,framerate=(fraction)30/1,width=1920,height=1080 " */
+    /*                   "! nvjpegdec " */
+    /*                   "! video/x-raw " */
+    /*                   "! nvvidconv " */
+    /*                   "! video/x-raw " */
+    /*                   "! tee name=t " */
+    /*                   "! queue leaky=1 " */
+    /*                   "! nvoverlaysink display-id=%s sync=false -ev " */
+    /*                   "t. " */
+    /*                   "! queue " */
+    /*                   "! omxh264enc " */
+    /*                   "! qtmux " */
+    /*                   "! filesink location=%s sync=false", */
+    /*                   cam, out, filename); */
     printf("pipeline: %s\n", buf);
     gst_init(&argc, &argv);
 
