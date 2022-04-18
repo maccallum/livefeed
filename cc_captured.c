@@ -26,7 +26,10 @@ void *th(void *param)
     {
         time_t t = time(NULL);
         struct tm tm = *localtime(&t);
-        snprintf(args->filename, ARGLEN, "%02d%02d%02d.%02d%02d%02d.%s\n",
+        char hn[128];
+        gethostname(hn, 128);
+        snprintf(args->filename, ARGLEN, "%s.%02d%02d%02d.%02d%02d%02d.%s\n",
+                 hn,
                  tm.tm_year + 1900,
                  tm.tm_mon + 1,
                  tm.tm_mday,
