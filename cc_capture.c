@@ -296,7 +296,7 @@ int main(int argc, char *argv[])
                       "! nvoverlaysink display-id=%s sync=false -ev "
                       "t. "
                       "! queue "
-                      "! omxh264enc "
+                      "! omxh264enc bitrate=15000000 control-rate=2 "
                       "! qtmux "
                       "! filesink location=%s sync=false",
                       cam, out, filename);
