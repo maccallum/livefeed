@@ -4,11 +4,33 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <gst/gst.h>
+#include <signal.h>
 
 #define SYSFS_GPIO_DIR "/sys/class/gpio"
 #define MAX_BUF 256
 
 #define GPIO_LED 216
+
+GMainLoop *loop;
+
+GstElement *pipeline;
+GstElement *src;
+GstElement *src_caps_filter;
+GstElement *jpegdec;
+GstElement *jpegdec_caps_filter;
+GstElement *vidconv;
+GstElement *vidconv_caps_filter;
+GstElement *tee;
+GstElement *queue_livestream;
+GstElement *queue_record;
+GstElement *sink_livestream;
+GstElement *h264enc;
+GstElement *mux;
+GstElement *sink_record;
+
+GstCaps *src_caps;
+GstCaps *jpegdec_caps;
+GstCaps *vidconv_caps;
 
 int gpio_export(unsigned int gpio)
 {
@@ -159,10 +181,15 @@ static gboolean gst_bus_call(GstBus *bus, GstMessage *msg, gpointer data)
         g_printerr("Error: %s\n", error->message);
         g_error_free(error);
 
+        /* gst_element_send_event(pipeline, gst_event_new_eos()); */
+        // wait for the EOS to traverse the pipeline and is reported to the bus
+        /* GstBus *bus = gst_element_get_bus(pipeline); */
+        /* gst_bus_timed_pop_filtered(bus, GST_CLOCK_TIME_NONE, GST_MESSAGE_EOS); */
+        // this stops the pipeline and frees all resources
+        
         g_main_loop_quit(loop);
         break;
     }
-
     case GST_MESSAGE_WARNING:
     {
         gchar  *debug;
@@ -174,10 +201,15 @@ static gboolean gst_bus_call(GstBus *bus, GstMessage *msg, gpointer data)
         g_printerr("Warning: %s\n", error->message);
         g_error_free(error);
 
+        /* gst_element_send_event(pipeline, gst_event_new_eos()); */
+        // wait for the EOS to traverse the pipeline and is reported to the bus
+        /* GstBus *bus = gst_element_get_bus(pipeline); */
+        /* gst_bus_timed_pop_filtered(bus, GST_CLOCK_TIME_NONE, GST_MESSAGE_EOS); */
+        // this stops the pipeline and frees all resources
+
         g_main_loop_quit(loop);
         break;
     }
-
     case GST_MESSAGE_DEVICE_REMOVED:
         g_print("Device removed\n");
         break;
@@ -188,12 +220,25 @@ static gboolean gst_bus_call(GstBus *bus, GstMessage *msg, gpointer data)
     return TRUE;
 }
 
+void sighandler(int signo)
+{
+    pid_t pid = getpid();
+    if(signo == SIGINT || signo == SIGTERM)
+    {
+        gst_element_send_event(pipeline, gst_event_new_eos());
+        GstBus *bus = gst_element_get_bus(pipeline);
+        gst_bus_timed_pop_filtered(bus, GST_CLOCK_TIME_NONE, GST_MESSAGE_EOS);
+        g_main_loop_quit(loop);
+        _exit(0);
+    }
+}
+
 int main(int argc, char *argv[])
 {
-    GstElement *pipeline;
+    //GstElement *pipeline;
     GError *err = NULL;
     GstBus *bus;
-    GMainLoop *loop;
+    //GMainLoop *loop;
     const int bufsize = 4096;
     int buflen;
     char buf[bufsize];
@@ -201,10 +246,16 @@ int main(int argc, char *argv[])
     char *out = "0";
     char *filename = "suck.h264";
 
-    /* int gpio = GPIO_LED; */
-    /* gpio_export(gpio); */
-    /* gpio_set_dir(gpio, 1); */
-    /* gpio_set_value(gpio, 1); */
+    if(signal(SIGINT, sighandler) == SIG_ERR)
+    {
+        printf("error installing signal handler\n");
+        return 0;
+    }
+    if(signal(SIGTERM, sighandler) == SIG_ERR)
+    {
+        printf("error installing signal handler\n");
+        return 0;
+    }
     
     if(argc > 1)
     {
@@ -219,20 +270,6 @@ int main(int argc, char *argv[])
         filename = argv[3];
     }
 
-    buflen = snprintf(buf,
-                      bufsize,
-                      "v4l2src device=/dev/%s io-mode=2 "
-                      "! image/jpeg,framerate=(fraction)30/1,width=1920,height=1080 "
-                      "! nvjpegdec "
-                      "! video/x-raw "
-                      "! nvvidconv "
-                      "! video/x-raw "
-                      "! nvoverlaysink display-id=%s sync=false -ev",
-                      cam, out);
-
-    /* 
- gst-launch-1.0 v4l2src device=/dev/cam2 io-mode=2 ! 'image/jpeg,framerate=(fraction)30/1,width=1920,height=1080' ! nvjpegdec ! video/x-raw ! nvvidconv ! video/x-raw ! tee name=t ! queue leaky=1 ! nvoverlaysink display-id=1 sync=false -ev t. ! queue ! omxh264enc ! qtmux ! filesink location=testvideo.h264 sync=false
-     */
     /* buflen = snprintf(buf, */
     /*                   bufsize, */
     /*                   "v4l2src device=/dev/%s io-mode=2 " */
@@ -241,16 +278,30 @@ int main(int argc, char *argv[])
     /*                   "! video/x-raw " */
     /*                   "! nvvidconv " */
     /*                   "! video/x-raw " */
-    /*                   "! tee name=t " */
-    /*                   "! queue leaky=1 " */
-    /*                   "! nvoverlaysink display-id=%s sync=false -ev " */
-    /*                   "t. " */
-    /*                   "! queue " */
-    /*                   "! omxh264enc " */
-    /*                   "! qtmux " */
-    /*                   "! filesink location=%s sync=false", */
-    /*                   cam, out, filename); */
+    /*                   "! nvoverlaysink display-id=%s sync=false -ev", */
+    /*                   cam, out); */
+
+    
+ /* gst-launch-1.0 v4l2src device=/dev/cam2 io-mode=2 ! 'image/jpeg,framerate=(fraction)30/1,width=1920,height=1080' ! nvjpegdec ! video/x-raw ! nvvidconv ! video/x-raw ! tee name=t ! queue leaky=1 ! nvoverlaysink display-id=1 sync=false -ev t. ! queue ! omxh264enc ! qtmux ! filesink location=testvideo.h264 sync=false */
+    buflen = snprintf(buf,
+                      bufsize,
+                      "v4l2src device=/dev/%s io-mode=2 "
+                      "! image/jpeg,framerate=(fraction)30/1,width=1920,height=1080 "
+                      "! nvjpegdec "
+                      "! video/x-raw "
+                      "! nvvidconv "
+                      "! video/x-raw "
+                      "! tee name=t "
+                      "! queue leaky=1 "
+                      "! nvoverlaysink display-id=%s sync=false -ev "
+                      "t. "
+                      "! queue "
+                      "! omxh264enc bitrate=15000000 control-rate=2 "
+                      "! qtmux "
+                      "! filesink location=%s sync=false",
+                      cam, out, filename);
     printf("pipeline: %s\n", buf);
+
     gst_init(&argc, &argv);
 
     loop = g_main_loop_new(NULL, FALSE);
@@ -261,8 +312,8 @@ int main(int argc, char *argv[])
     gst_bus_add_watch (bus, gst_bus_call, loop);
 
     g_main_loop_run(loop);
+    printf("out\n");
 
-    /* gpio_set_value(gpio, 0); */
-    
+    exit(0);
     return 0;
 }

@@ -24,10 +24,22 @@ void *th(void *param)
     struct args *args = (struct args *)param;
     while(1)
     {
+        time_t t = time(NULL);
+        struct tm tm = *localtime(&t);
+        char hn[128];
+        gethostname(hn, 128);
+        snprintf(args->filename, ARGLEN, "%s.%02d%02d%02d.%02d%02d%02d.%s.mp4\n",
+                 hn,
+                 tm.tm_year + 1900,
+                 tm.tm_mon + 1,
+                 tm.tm_mday,
+                 tm.tm_hour,
+                 tm.tm_min,
+                 tm.tm_sec,
+                 args->out);
         printf("thread %s: forking\n", args->out);
         pid_t ppid_before_fork = getpid();
         pid_t pid = fork();
-
         if(pid < 0)
         {
             perror(0);
@@ -44,7 +56,7 @@ void *th(void *param)
         else
         {
             /* child */
-            int r = prctl(PR_SET_PDEATHSIG, SIGHUP);
+            int r = prctl(PR_SET_PDEATHSIG, SIGINT);
             if(r < 0)
             {
                 perror(0);
@@ -99,28 +111,28 @@ int main(int ac, char **av)
     /* { */
     /*     flock(lockfd, LOCK_EX); */
     /* } */
-    time_t t = time(NULL);
-    struct tm tm = *localtime(&t);
+    /* time_t t = time(NULL); */
+    /* struct tm tm = *localtime(&t); */
 
     snprintf(args1.cam, ARGLEN, "%s", "cam1");
     snprintf(args1.out, ARGLEN, "%s", "0");
-    snprintf(args1.filename, ARGLEN, "%02d%02d%02d.%02d%02d%02d.0\n",
-             tm.tm_year + 1900,
-             tm.tm_mon + 1,
-             tm.tm_mday,
-             tm.tm_hour,
-             tm.tm_min,
-             tm.tm_sec);
+    /* snprintf(args1.filename, ARGLEN, "%02d%02d%02d.%02d%02d%02d.0\n", */
+    /*          tm.tm_year + 1900, */
+    /*          tm.tm_mon + 1, */
+    /*          tm.tm_mday, */
+    /*          tm.tm_hour, */
+    /*          tm.tm_min, */
+    /*          tm.tm_sec); */
 
     snprintf(args2.cam, ARGLEN, "%s", "cam2");
     snprintf(args2.out, ARGLEN, "%s", "1");
-    snprintf(args2.filename, ARGLEN, "%02d%02d%02d.%02d%02d%02d.1\n",
-             tm.tm_year + 1900,
-             tm.tm_mon + 1,
-             tm.tm_mday,
-             tm.tm_hour,
-             tm.tm_min,
-             tm.tm_sec);
+    /* snprintf(args2.filename, ARGLEN, "%02d%02d%02d.%02d%02d%02d.1\n", */
+    /*          tm.tm_year + 1900, */
+    /*          tm.tm_mon + 1, */
+    /*          tm.tm_mday, */
+    /*          tm.tm_hour, */
+    /*          tm.tm_min, */
+    /*          tm.tm_sec); */
 
     pthread_create(&t1, NULL, th, (void *)&args1);
     pthread_create(&t2, NULL, th, (void *)&args2);
