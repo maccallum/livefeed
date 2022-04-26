@@ -86,6 +86,8 @@ void sighandler(int signo)
 
 int main(int ac, char **av)
 {
+    printf("argv[1]:\n%s\n", av[1]);
+    return 0;
     pthread_t t1, t2;
     struct args args1, args2;
     int r;
@@ -94,26 +96,6 @@ int main(int ac, char **av)
         printf("error installing signal handler\n");
         return 0;
     }
-    /* int lockfd = open("/home/john/cc_capture_lock", O_RDRW | O_CREAT | O_EXCL | O_NOFOLLOW); */
-    /* if(lockfd < 0) */
-    /* { */
-    /*     switch(errno) */
-    /*     { */
-    /*     case EEXIST: */
-
-    /*         break; */
-    /*     default: */
-    /*         perror("failed to open lock file. "); */
-    /*         break; */
-    /*     } */
-    /* } */
-    /* else */
-    /* { */
-    /*     flock(lockfd, LOCK_EX); */
-    /* } */
-    /* time_t t = time(NULL); */
-    /* struct tm tm = *localtime(&t); */
-
     snprintf(args1.cam, ARGLEN, "%s", "cam1");
     snprintf(args1.out, ARGLEN, "%s", "0");
     /* snprintf(args1.filename, ARGLEN, "%02d%02d%02d.%02d%02d%02d.0\n", */
