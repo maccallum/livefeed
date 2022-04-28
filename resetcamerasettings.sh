@@ -1,6 +1,6 @@
 #!/bin/bash
 
-dev="/dev/video0"
+dev="/dev/cam1"
 
 while getopts "d:" options; do
     case "${options}" in
