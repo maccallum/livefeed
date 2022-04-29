@@ -86,8 +86,6 @@ void sighandler(int signo)
 
 int main(int ac, char **av)
 {
-    printf("argv[1]:\n%s\n", av[1]);
-    return 0;
     pthread_t t1, t2;
     struct args args1, args2;
     int r;
