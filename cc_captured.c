@@ -8,36 +8,50 @@
 #include <sys/prctl.h>
 #include <fcntl.h>
 
-#define ARGLEN 256
+/* #define ARGLEN 256 */
+#define PIPELINE_MAX_LEN 4096
 
+int supply_date = 0;
 volatile int die = 0;
 
-struct args
-{
-    char cam[ARGLEN];
-    char out[ARGLEN];
-    char filename[ARGLEN];
-};
+/* struct args */
+/* { */
+/*     char cam[ARGLEN]; */
+/*     char out[ARGLEN]; */
+/*     char filename[ARGLEN]; */
+/* }; */
+
+/* struct args */
+/* { */
+/*     int ac; */
+/*     char **av; */
+/* }; */
 
 void *th(void *param)
 {
-    struct args *args = (struct args *)param;
+    /* struct args *args = (struct args *)param; */
     while(1)
     {
-        time_t t = time(NULL);
-        struct tm tm = *localtime(&t);
-        char hn[128];
-        gethostname(hn, 128);
-        snprintf(args->filename, ARGLEN, "%s.%02d%02d%02d.%02d%02d%02d.%s.mp4\n",
-                 hn,
-                 tm.tm_year + 1900,
-                 tm.tm_mon + 1,
-                 tm.tm_mday,
-                 tm.tm_hour,
-                 tm.tm_min,
-                 tm.tm_sec,
-                 args->out);
-        printf("thread %s: forking\n", args->out);
+        char pipeline[PIPELINE_MAX_LEN];
+        if(supply_date)
+        {
+            time_t t = time(NULL);
+            struct tm tm = *localtime(&t);
+            char buf[128];
+            snprintf(buf, 128, "%02d%02d%02d.%02d%02d%02d",
+                     tm.tm_year + 1900,
+                     tm.tm_mon + 1,
+                     tm.tm_mday,
+                     tm.tm_hour,
+                     tm.tm_min,
+                     tm.tm_sec);
+            snprintf(pipeline, PIPELINE_MAX_LEN, (char *)param, buf);
+        }
+        else
+        {
+            strncpy(pipeline, (char *)param, PIPELINE_MAX_LEN);
+        }
+
         pid_t ppid_before_fork = getpid();
         pid_t pid = fork();
         if(pid < 0)
@@ -48,10 +62,8 @@ void *th(void *param)
         else if(pid)
         {
             /* parent */
-            int e;
-            printf("thread %s: waiting\n", args->out);
+            /* int e; */
             wait(NULL);
-            printf("thread %s: child process died, restarting...\n", args->out);
         }
         else
         {
@@ -66,12 +78,12 @@ void *th(void *param)
             {
                 exit(1);
             }
-            printf("thread %s: child process execing cc_capture\n", args->out);
             execl("/home/john/livefeed/cc_capture",
                   "/home/john/livefeed/cc_capture",
-                  args->cam,
-                  args->out,
-                  args->filename);
+                  pipeline, (char *)NULL);
+            /* args->cam, */
+            /* args->out, */
+            /* args->filename); */
         }
     }
 }
@@ -86,16 +98,50 @@ void sighandler(int signo)
 
 int main(int ac, char **av)
 {
-    pthread_t t1, t2;
-    struct args args1, args2;
-    int r;
+    pthread_t t1;/* , t2; */
+    /* struct args args1, args2; */
+    /* int r; */
+
+    char *pipeline = NULL;
+    if(ac < 2)
+    {
+        
+        fprintf(stderr, "%s: you must supply a pipeline\n",
+            av[0]);
+        return 0;
+    }
+    if(ac == 2)
+    {
+        pipeline = av[1];
+    }
+    if(ac == 3)
+    {
+        if(!strcmp(av[1], "-d"))
+        {
+            supply_date = 1;
+            pipeline = av[2];
+        }
+        else
+        {
+            /* printusage(); */
+            fprintf(stderr, "%s: unknown option %s\n",
+                    av[0],
+                    av[1]);
+            return 0;
+        }
+    }
+    /* struct args args = {ac, av}; */
+    /* pthread_t t1, t2; */
+    /* struct args args1, args2; */
+    /* int r; */
+
     if(signal(SIGINT, sighandler) == SIG_ERR)
     {
         printf("error installing signal handler\n");
         return 0;
     }
-    snprintf(args1.cam, ARGLEN, "%s", "cam1");
-    snprintf(args1.out, ARGLEN, "%s", "0");
+    /* snprintf(args1.cam, ARGLEN, "%s", "cam1"); */
+    /* snprintf(args1.out, ARGLEN, "%s", "0"); */
     /* snprintf(args1.filename, ARGLEN, "%02d%02d%02d.%02d%02d%02d.0\n", */
     /*          tm.tm_year + 1900, */
     /*          tm.tm_mon + 1, */
@@ -104,8 +150,8 @@ int main(int ac, char **av)
     /*          tm.tm_min, */
     /*          tm.tm_sec); */
 
-    snprintf(args2.cam, ARGLEN, "%s", "cam2");
-    snprintf(args2.out, ARGLEN, "%s", "1");
+    /* snprintf(args2.cam, ARGLEN, "%s", "cam2"); */
+    /* snprintf(args2.out, ARGLEN, "%s", "1"); */
     /* snprintf(args2.filename, ARGLEN, "%02d%02d%02d.%02d%02d%02d.1\n", */
     /*          tm.tm_year + 1900, */
     /*          tm.tm_mon + 1, */
@@ -114,11 +160,12 @@ int main(int ac, char **av)
     /*          tm.tm_min, */
     /*          tm.tm_sec); */
 
-    pthread_create(&t1, NULL, th, (void *)&args1);
-    pthread_create(&t2, NULL, th, (void *)&args2);
+    pthread_create(&t1, NULL, th, (void *)pipeline);
+    /* pthread_create(&t2, NULL, th, (void *)&args2); */
 
     while(die == 0)
     {
+        /* th((void *)pipeline); */
         sleep(1);
     }
     

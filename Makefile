@@ -1,7 +1,7 @@
 CC=clang
 CFLAGS=-O3
 
-all: CFLAGS=-O3
+all: CFLAGS=-O3 -Wall
 all: cc_capture cc_captured
 
 cc_capture: INCLUDES=-I/usr/include/gstreamer-1.0 -I/usr/include/glib-2.0 -I/usr/lib/aarch64-linux-gnu/glib-2.0/include
