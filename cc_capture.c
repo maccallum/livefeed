@@ -222,7 +222,7 @@ static gboolean gst_bus_call(GstBus *bus, GstMessage *msg, gpointer data)
 
 void sighandler(int signo)
 {
-    pid_t pid = getpid();
+    /* pid_t pid = getpid(); */
     if(signo == SIGINT || signo == SIGTERM)
     {
         gst_element_send_event(pipeline, gst_event_new_eos());
@@ -235,16 +235,15 @@ void sighandler(int signo)
 
 int main(int argc, char *argv[])
 {
-    //GstElement *pipeline;
     GError *err = NULL;
     GstBus *bus;
-    //GMainLoop *loop;
-    const int bufsize = 4096;
-    int buflen;
-    char buf[bufsize];
-    char *cam = "cam1";
-    char *out = "0";
-    char *filename = "suck.h264";
+    /* const int bufsize = 4096; */
+    /* int buflen; */
+    /* char buf[bufsize]; */
+    /* char *cam = "cam1"; */
+    /* char *out = "0"; */
+    /* char *filename = "suck.h264"; */
+    char *pipeline_str = NULL;
 
     if(signal(SIGINT, sighandler) == SIG_ERR)
     {
@@ -256,19 +255,26 @@ int main(int argc, char *argv[])
         printf("error installing signal handler\n");
         return 0;
     }
-    
-    if(argc > 1)
+
+    if(argc < 2)
     {
-        cam = argv[1];
+        fprintf(stderr, "%s: you must supply a pipeline\n",
+                argv[0]);
+        exit(0);
     }
-    if(argc > 2)
-    {
-        out = argv[2];
-    }
-    if(argc > 3)
-    {
-        filename = argv[3];
-    }
+    pipeline_str = argv[1];
+    /* if(argc > 1) */
+    /* { */
+    /*     cam = argv[1]; */
+    /* } */
+    /* if(argc > 2) */
+    /* { */
+    /*     out = argv[2]; */
+    /* } */
+    /* if(argc > 3) */
+    /* { */
+    /*     filename = argv[3]; */
+    /* } */
 
     /* buflen = snprintf(buf, */
     /*                   bufsize, */
@@ -283,29 +289,30 @@ int main(int argc, char *argv[])
 
     
  /* gst-launch-1.0 v4l2src device=/dev/cam2 io-mode=2 ! 'image/jpeg,framerate=(fraction)30/1,width=1920,height=1080' ! nvjpegdec ! video/x-raw ! nvvidconv ! video/x-raw ! tee name=t ! queue leaky=1 ! nvoverlaysink display-id=1 sync=false -ev t. ! queue ! omxh264enc ! qtmux ! filesink location=testvideo.h264 sync=false */
-    buflen = snprintf(buf,
-                      bufsize,
-                      "v4l2src device=/dev/%s io-mode=2 "
-                      "! image/jpeg,framerate=(fraction)30/1,width=1920,height=1080 "
-                      "! nvjpegdec "
-                      "! video/x-raw "
-                      "! nvvidconv "
-                      "! video/x-raw "
-                      "! tee name=t "
-                      "! queue leaky=1 "
-                      "! nvoverlaysink display-id=%s sync=false -ev "
-                      "t. "
-                      "! queue "
-                      "! omxh264enc bitrate=15000000 control-rate=2 "
-                      "! qtmux "
-                      "! filesink location=%s sync=false",
-                      cam, out, filename);
-    printf("pipeline: %s\n", buf);
+    /* buflen = snprintf(buf, */
+    /*                   bufsize, */
+    /*                   "v4l2src device=/dev/%s io-mode=2 " */
+    /*                   "! image/jpeg,framerate=(fraction)30/1,width=1920,height=1080 " */
+    /*                   "! nvjpegdec " */
+    /*                   "! video/x-raw " */
+    /*                   "! nvvidconv " */
+    /*                   "! video/x-raw " */
+    /*                   "! tee name=t " */
+    /*                   "! queue leaky=1 " */
+    /*                   "! nvoverlaysink display-id=%s sync=false -ev " */
+    /*                   "t. " */
+    /*                   "! queue " */
+    /*                   "! omxh264enc bitrate=15000000 control-rate=2 " */
+    /*                   "! qtmux " */
+    /*                   "! filesink location=%s sync=false", */
+    /*                   cam, out, filename); */
+    /* printf("pipeline: %s\n", buf); */
+    printf("pipeline: %s\n", pipeline_str);
 
     gst_init(&argc, &argv);
 
     loop = g_main_loop_new(NULL, FALSE);
-    pipeline = gst_parse_launch(buf, &err);
+    pipeline = gst_parse_launch(pipeline_str/* buf */, &err);
     gst_element_set_state(pipeline, GST_STATE_PLAYING);
     
     bus = gst_element_get_bus(pipeline);
