@@ -25,6 +25,24 @@ then
         echo "$pipeline"
         sudo -u john /home/john/livefeed/cc_captured -d "$pipeline" &
     done
+elif [[ "$hn" = "ose" ]]
+then
+    # Dell inspirion
+    pipeline="v4l2src device=/dev/cam1 io-mode=2
+		! image/jpeg,framerate=30/1,width=1920,height=1080
+		! jpegdec
+		! video/x-raw,format=I420
+		! videoconvert
+		! video/x-raw,format=I420
+		! tee name=t
+		! queue
+		! avenc_mpeg4
+		! qtmux
+		! filesink location=${hn}.%s.1.mp4 sync=false t.
+		! queue leaky=1
+		! xvimagesink sync=false"
+    echo "$pipeline"
+    sudo -u john /home/john/livefeed/cc_captured -d "$pipeline" &
 else
     echo "unknown host!"
 fi
