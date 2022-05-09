@@ -94,26 +94,6 @@ int main(int ac, char **av)
         printf("error installing signal handler\n");
         return 0;
     }
-    /* int lockfd = open("/home/john/cc_capture_lock", O_RDRW | O_CREAT | O_EXCL | O_NOFOLLOW); */
-    /* if(lockfd < 0) */
-    /* { */
-    /*     switch(errno) */
-    /*     { */
-    /*     case EEXIST: */
-
-    /*         break; */
-    /*     default: */
-    /*         perror("failed to open lock file. "); */
-    /*         break; */
-    /*     } */
-    /* } */
-    /* else */
-    /* { */
-    /*     flock(lockfd, LOCK_EX); */
-    /* } */
-    /* time_t t = time(NULL); */
-    /* struct tm tm = *localtime(&t); */
-
     snprintf(args1.cam, ARGLEN, "%s", "cam1");
     snprintf(args1.out, ARGLEN, "%s", "0");
     /* snprintf(args1.filename, ARGLEN, "%02d%02d%02d.%02d%02d%02d.0\n", */
