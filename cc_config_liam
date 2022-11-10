@@ -1,0 +1,31 @@
+#!/bin/bash
+# settings by Liam Morgan
+v4l2-ctl -d /dev/cam1 -c brightness=0
+v4l2-ctl -d /dev/cam1 -c contrast=39
+v4l2-ctl -d /dev/cam1 -c saturation=70
+v4l2-ctl -d /dev/cam1 -c hue=1
+v4l2-ctl -d /dev/cam1 -c white_balance_temperature_auto=0
+v4l2-ctl -d /dev/cam1 -c gamma=118
+v4l2-ctl -d /dev/cam1 -c gain=0
+v4l2-ctl -d /dev/cam1 -c power_line_frequency=0
+v4l2-ctl -d /dev/cam1 -c white_balance_temperature=3660
+v4l2-ctl -d /dev/cam1 -c sharpness=0
+v4l2-ctl -d /dev/cam1 -c backlight_compensation=0
+v4l2-ctl -d /dev/cam1 -c exposure_auto=1
+v4l2-ctl -d /dev/cam1 -c exposure_absolute=324
+v4l2-ctl -d /dev/cam1 -c exposure_auto_priority=1
+
+v4l2-ctl -d /dev/cam2 -c brightness=0
+v4l2-ctl -d /dev/cam2 -c contrast=39
+v4l2-ctl -d /dev/cam2 -c saturation=70
+v4l2-ctl -d /dev/cam2 -c hue=1
+v4l2-ctl -d /dev/cam2 -c white_balance_temperature_auto=0
+v4l2-ctl -d /dev/cam2 -c gamma=118
+v4l2-ctl -d /dev/cam2 -c gain=0
+v4l2-ctl -d /dev/cam2 -c power_line_frequency=0
+v4l2-ctl -d /dev/cam2 -c white_balance_temperature=3660
+v4l2-ctl -d /dev/cam2 -c sharpness=0
+v4l2-ctl -d /dev/cam2 -c backlight_compensation=0
+v4l2-ctl -d /dev/cam2 -c exposure_auto=1
+v4l2-ctl -d /dev/cam2 -c exposure_absolute=324
+v4l2-ctl -d /dev/cam2 -c exposure_auto_priority=1
